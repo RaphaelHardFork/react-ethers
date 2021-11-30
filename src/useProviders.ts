@@ -2,10 +2,16 @@ import detectEthereumProvider from "@metamask/detect-provider"
 import WalletConnectProvider from "@walletconnect/web3-provider"
 import { ethers } from "ethers"
 import { useEffect, useReducer, useRef, useState } from "react"
-import { reducer } from "./reducer"
+import { reducer, STATE, ACTION } from "./reducer"
 import { INFURA_ID } from "./apiKeys"
+import { Networkish } from "@ethersproject/networks"
+import {
+  FallbackProviderConfig,
+  JsonRpcFetchFunc,
+  Provider,
+} from "@ethersproject/providers"
 
-/*
+/* 
 This is a hook to connect to blockchain through several provider.
 
 For security and pratical reasons the page is reloaded each time the provider change. More accurately each time
@@ -17,25 +23,27 @@ Metamask provider the easiest way to connect a blockchain, indeed Metamask injec
 So the except the connection is initiated with Wallet Connect, the hook will try to find the provider from Metamask
 */
 
+type PROVIDER = null | WalletConnectProvider | unknown
+
 export const useProviders = () => {
   // This state is internal, it store the provider which will be used.
-  const [provider, setProvider] = useState()
+  const [provider, setProvider] = useState<PROVIDER>(null)
 
   const isMounted = useRef(false)
 
   // State of the hook which will be exported
 
   const [state, dispatch] = useReducer(reducer, {
-    providerType: undefined,
+    providerType: null,
     ethersProvider: null,
-    providerSrc: undefined,
-    networkName: undefined,
+    providerSrc: null,
+    networkName: null,
     chainId: 0,
     signer: null,
     isLogged: false,
     account: ethers.constants.AddressZero,
     balance: 0,
-  })
+  } as STATE)
   // Extraction of keys of the hook state
   const { providerType, ethersProvider, networkName, account, providerSrc } =
     state
@@ -46,7 +54,10 @@ export const useProviders = () => {
     console.log("1. Get a provider")
     // Read options in the local storage
     const walletConnect = window.localStorage.getItem("wallet-connect")
-    const network = window.localStorage.getItem("switched-network")
+    let network = window.localStorage.getItem("switched-network") as
+      | Networkish
+      | undefined
+
     ;(async () => {
       // Connexion to wallet connect initiated
       // Can't store the connection since the page is reloaded
@@ -78,8 +89,8 @@ export const useProviders = () => {
 
           // The quorum of providers selected by {getDefaultProvider} is extracted
           // and will be used to create a FallbackProvider
-          const providersQuorum = defaultProvider.providerConfigs
-          setProvider(providersQuorum)
+          // difficult to extract the quorum
+          setProvider(defaultProvider)
         }
       }
     })()
@@ -98,7 +109,7 @@ export const useProviders = () => {
         // Try to wrap the providers into a Web3Provider (Metamask & Wallet Connect)
         try {
           const web3Provider = new ethers.providers.Web3Provider(
-            provider,
+            provider as JsonRpcFetchFunc,
             "any"
           )
           const src = web3Provider.connection.url
@@ -107,12 +118,13 @@ export const useProviders = () => {
             providerType: "Web3Provider",
             wrappedProvider: web3Provider,
             providerSrc: src,
-          })
+          } as ACTION)
         } catch {
           // Create a fallback provider with the quorum of providers
           const fallbackProvider = new ethers.providers.FallbackProvider(
-            provider
+            provider as (Provider | FallbackProviderConfig)[]
           )
+
           const src = `From quorum of ${fallbackProvider.providerConfigs.length} providers`
           dispatch({
             type: "SET_ETHERS_PROVIDER",
@@ -172,7 +184,10 @@ export const useProviders = () => {
     }
   }
 
-  const switchNetwork = async (chainId, networkName) => {
+  const switchNetwork = async (
+    chainId: string | number,
+    networkName: string
+  ) => {
     // Only Metamask support this RPC method
     if (providerSrc === "metamask") {
       try {
@@ -196,7 +211,7 @@ export const useProviders = () => {
 
   // connect to wallet connect
   const wcConnect = () => {
-    window.localStorage.setItem("wallet-connect", true)
+    window.localStorage.setItem("wallet-connect", "true")
     window.location.reload()
   }
 
@@ -204,7 +219,7 @@ export const useProviders = () => {
   // Listen block on the EthersProvider (only event listenable from this provider)
   useEffect(() => {
     if (ethersProvider) {
-      const newBlock = async (block) => {
+      const newBlock = async (block: number) => {
         console.log(`Block n°${block} mined on ${networkName}`)
         if (account !== ethers.constants.AddressZero) {
           const balance = await ethersProvider.getBalance(account)
@@ -224,13 +239,13 @@ export const useProviders = () => {
   // Network changed
   useEffect(() => {
     if (providerType === "Web3Provider") {
-      const chainChanged = async (chainId) => {
+      const chainChanged = async (chainId: number | string) => {
         // No need to reload the page with Metamask (maybe with Wallet Connect, can we change it on the wallet?)
         console.log(`Chain changed to ${chainId}`)
         if (providerSrc === "metamask") {
           const newProvider = await detectEthereumProvider()
           const web3Provider = new ethers.providers.Web3Provider(
-            newProvider,
+            newProvider as JsonRpcFetchFunc,
             "any"
           )
           ethersProvider.off("block")
@@ -270,7 +285,7 @@ export const useProviders = () => {
   // Account changed
   useEffect(() => {
     if (providerType === "Web3Provider") {
-      const accountChanged = async (newAccount) => {
+      const accountChanged = async (newAccount: string) => {
         console.log(`Account changed to ${newAccount}`)
         // Same as in [3. Get informations]
         if (providerType === "Web3Provider") {
@@ -299,9 +314,10 @@ export const useProviders = () => {
   }, [ethersProvider, providerType, providerSrc])
 
   // Connection to the provider
+  type CONNECT = { chainId: string | number }
   useEffect(() => {
     if (providerType === "Web3Provider") {
-      const connection = async ({ chainId }) => {
+      const connection = async ({ chainId }: CONNECT) => {
         console.log(`Connection to chainID: ${chainId}`)
       }
       ethersProvider.provider.on("connect", connection)
@@ -312,7 +328,7 @@ export const useProviders = () => {
   // Disconnection from the provider (Wallet Connect)
   useEffect(() => {
     if (providerType === "Web3Provider") {
-      const disconnection = async (code, reason) => {
+      const disconnection = async (code: string | number, reason: string) => {
         console.log(code)
         console.log(reason)
         // Infinite loop with killSession
@@ -330,7 +346,7 @@ export const useProviders = () => {
   // -------------------------------------------LISTEN EVENT FROM WALLET CONNECT
   useEffect(() => {
     if (providerSrc === "eip-1193:") {
-      const update = async (error, payload) => {
+      const update = async (error: string, payload: string) => {
         console.log(error)
         console.log(payload)
       }

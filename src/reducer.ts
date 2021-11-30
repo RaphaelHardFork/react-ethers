@@ -1,7 +1,32 @@
 import { ethers } from "ethers"
+import { Web3Provider, FallbackProvider } from "@ethersproject/providers"
+
+export type ACTION = {
+  type: undefined | string
+  providerType: undefined | string | null
+  wrappedProvider: undefined | Web3Provider | FallbackProvider | null
+  providerSrc: undefined | string | null
+  networkName: undefined | string | null
+  chainId: undefined | string | number
+  account: undefined | string | null
+  balance: undefined | string | number
+  signer: undefined | any
+}
+
+export type STATE = {
+  providerType: string | null
+  ethersProvider: null | any
+  providerSrc: string | null
+  networkName: string | null
+  isLogged: boolean
+  chainId: string | number
+  account: string | null
+  balance: string | number
+  signer: any
+}
 
 // Reducer for maintain the hook state
-export const reducer = (state, action) => {
+export const reducer = (state: STATE, action: ACTION) => {
   switch (action.type) {
     case "SET_ETHERS_PROVIDER":
       return {
