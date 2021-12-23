@@ -13,20 +13,20 @@
 
 `react-ethers` was created to facilitate the use, in React, of [Ethers.js](https://docs.ethers.io/v5/) which is a library for interacting with Ethereum Blockchain. It aims to be a small dependencies which can be easily used in any React dApp.
 
-- Installation
-- Usage in the dApp
-  - Wrap the dApp
-  - Get blockchain informations
-  - Connect Metamask
-  - Switch network
-  - Connect Wallet Connect
-  - Create a contract instance
-  - Do a call on a contract
-  - Tools
-- API keys
-- How it's work
-- Improvment for V2
-- Contribute
+- [Installation](https://github.com/RaphaelHardFork/react-ethers#installation)
+- [Usage in the dApp](https://github.com/RaphaelHardFork/react-ethers#usage-in-the-dapp)
+  - [Wrap the dApp](https://github.com/RaphaelHardFork/react-ethers#wrap-your-app-with-the-web3contextprovider)
+  - [Get blockchain informations](https://github.com/RaphaelHardFork/react-ethers#get-blockchain-informations)
+  - [Connect Metamask](https://github.com/RaphaelHardFork/react-ethers#connect-metamask)
+  - [Switch network](https://github.com/RaphaelHardFork/react-ethers#switch-network)
+  - [Connect Wallet Connect](https://github.com/RaphaelHardFork/react-ethers#connect-with-wallet-connect)
+  - [Create a contract instance](https://github.com/RaphaelHardFork/react-ethers#create-a-contract-instance)
+  - [Do a call on a contract](https://github.com/RaphaelHardFork/react-ethers#do-a-call-on-a-contract)
+  - [Tools](https://github.com/RaphaelHardFork/react-ethers#tools)
+- [API keys](https://github.com/RaphaelHardFork/react-ethers#api-keys)
+- [How it's work](https://github.com/RaphaelHardFork/react-ethers#react-ethers-in-action)
+- [Improvment for V2](https://github.com/RaphaelHardFork/react-ethers#improvment-for-v2)
+- [Contribute](https://github.com/RaphaelHardFork/react-ethers#contribution)
 
 ## Installation
 
