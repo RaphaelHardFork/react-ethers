@@ -1,4 +1,4 @@
-import { ethers } from "ethers"
+import { ethers, BigNumber, BigNumberish } from "ethers"
 import { useContext } from "react"
 import { ProviderContext } from "./Web3ContextProvider"
 
@@ -7,8 +7,12 @@ export const useWeb3 = () => {
   const { state, switchNetwork, wcConnect, connectToMetamask } =
     useContext(ProviderContext)
 
-  function readNumber(bigNumber) {
-    return ethers.utils.formatEther(bigNumber)
+  function readNumber(
+    bigNumber: BigNumber | BigNumberish,
+    decimal: number | undefined
+  ) {
+    decimal === undefined ? (decimal = 0) : decimal
+    return ethers.utils.formatUnits(bigNumber, decimal)
   }
 
   // This add a security to prevent an utilisation of the useWeb3 hook outside the context provider
@@ -17,5 +21,11 @@ export const useWeb3 = () => {
       `It seems that you are trying to use ContractContext outside of its provider`
     )
   }
-  return { state, switchNetwork, wcConnect, connectToMetamask, readNumber }
+  return {
+    state,
+    switchNetwork,
+    wcConnect,
+    connectToMetamask,
+    readNumber,
+  } as const
 }

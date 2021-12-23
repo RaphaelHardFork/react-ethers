@@ -1,32 +1,43 @@
-// ts-check
-import { Link, Text } from "@chakra-ui/layout"
-import { useToast } from "@chakra-ui/toast"
 import { useState } from "react"
+import { ContractInstance } from "./useContract"
+
+interface metamaskError {
+  code: string | number
+  message: string
+  error: {
+    code: number
+    message: string
+    data: { originalError: { code: number; data: string; message: string } }
+  }
+}
+
+export type ContractError = metamaskError
 
 // This hook allow to call a blockchain function and have an associated status of the transaction
 // The hook is customizable, here we use the {toast} from CHAKRA-UI
 export const useCall = () => {
   const [status, setStatus] = useState("")
-  const toast = useToast()
+  const [transaction, setTransaction] = useState(null)
+  const [errorMessage, setErrorMessage] = useState("")
 
   // read function to avoid network change problems
   // NOT USED IN THIS VERSION
-  const readContract = async (contract, functionName, params) => {
-    let nbOfParam
-    if (params === undefined) {
-      nbOfParam = 0
-    } else {
-      nbOfParam = params.length
-    }
+  const readContract = async (
+    contract: ContractInstance,
+    functionName: string,
+    params: Array<any>
+  ) => {
+    if (contract === null) throw new Error("Contract instance is not set")
+    if (params === undefined) params = []
 
     let result
     try {
-      switch (nbOfParam) {
+      switch (params.length) {
         case 0:
           result = await contract[functionName]()
           break
         case 1:
-          result = await contract[functionName](params[0]) // .functionName
+          result = await contract[functionName](params[0])
           break
         case 2:
           result = await contract[functionName](params[0], params[1])
@@ -57,12 +68,12 @@ export const useCall = () => {
       return result
     } catch (e) {
       let errorMessage
-      switch (e.code) {
+      switch ((e as Error).name) {
         case "NETWORK_ERROR":
-          errorMessage = "Wrong network: " + e.message
+          errorMessage = "Wrong network: " + (e as Error).message
           break
         case "CALL_EXCEPTION":
-          errorMessage = "Wrong network (certainly): " + e.message
+          errorMessage = "Wrong network (certainly): " + (e as Error).message
           break
         default:
           errorMessage = "unknown error"
@@ -73,19 +84,19 @@ export const useCall = () => {
   }
 
   // Ex: await contractCall(token, "transfer", ["0x....", 105000])
-  const contractCall = async (contract, functionName, params) => {
-    let nbOfParam
-    if (params === undefined) {
-      nbOfParam = 0
-    } else {
-      nbOfParam = params.length
-    }
+  const contractCall = async (
+    contract: ContractInstance,
+    functionName: string,
+    params: Array<any>
+  ) => {
+    if (contract === null) throw new Error("Contract instance is not set")
+    if (params === undefined) params = []
     let tx
     try {
       setStatus("Waiting for confirmation")
 
       // transaction
-      switch (nbOfParam) {
+      switch (params.length) {
         case 0:
           tx = await contract[functionName]()
           break
@@ -119,73 +130,44 @@ export const useCall = () => {
           console.log("Wrong number of params")
       }
       setStatus("Pending")
-      try {
-        // throw an error if this is a read-only call
-        await tx.wait()
-      } catch {
-        setStatus("")
-        return tx
-      }
 
-      // If transaction success
+      await tx.wait()
+
+      // Transaction succeed
       setStatus("Success")
-      toast({
-        title: "Transaction completed",
-        description: (
-          <>
-            <Text isTruncated>Hash: {tx.hash})</Text>
-            <Link
-              isExternal
-              href={`https://rinkeby.etherscan.io/tx/${tx.hash}`}
-            >
-              See on Etherscan
-            </Link>
-          </>
-        ),
-        status: "success",
-        duration: 10000,
-        isClosable: true,
-      })
+      setTransaction(tx)
     } catch (e) {
-      // If transaction fail
+      // Transaction failed
+      const u = e as ContractError
       let errorMessage
-      console.log(e.code)
-      console.log(e.message)
+      console.log(u.error)
+      console.log(u.code)
 
       // Error management need to be improved (add wallet connect & read-only contract)
-      switch (e.code) {
+      switch (u.code) {
         case "UNPREDICTABLE_GAS_LIMIT":
-          errorMessage = e.error.message
+          errorMessage = u.error.message
           break
         case 4001:
-          errorMessage = e.message
+          errorMessage = u.message
           break
         case "INVALID_ARGUMENT":
-          errorMessage = "Wrong argument: " + e.message
+          errorMessage = "Wrong argument: " + u.message
           break
         case "UNSUPPORTED_OPERATION":
-          errorMessage = "Wrong setup: " + e.message
+          errorMessage = "Wrong setup: " + u.message
           break
-
         case "CALL_EXCEPTION":
-          errorMessage = "Wrong network (certainly): " + e.message
+          errorMessage = "Wrong network (certainly): " + u.message
           break
         default:
           errorMessage = "unknown error"
           break
       }
       setStatus("Failed")
-      toast({
-        title: "Transaction failed",
-        description: errorMessage,
-        status: "error",
-        duration: 7000,
-        isClosable: true,
-      })
+      setErrorMessage(errorMessage)
     }
-
-    return tx
   }
 
-  return [status, contractCall, readContract]
+  return { status, tx: transaction, errorMessage, contractCall, readContract }
 }

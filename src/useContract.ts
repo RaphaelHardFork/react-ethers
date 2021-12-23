@@ -2,11 +2,13 @@ import { ethers } from "ethers"
 import { useEffect, useState } from "react"
 import { useWeb3 } from "./useWeb3"
 
+export type ContractInstance = null | ethers.Contract
+
 // This hook have to be set in a context in order to have a unique instance of the contract
 // Otherwise event will be listened one time for each time we use this hook
-export const useContract = (address, abi) => {
+export const useContract = (address: string, abi: []) => {
   const { state } = useWeb3()
-  const [contract, setContract] = useState(null)
+  const [contract, setContract] = useState<ContractInstance>(null)
 
   useEffect(() => {
     if (state.ethersProvider) {
