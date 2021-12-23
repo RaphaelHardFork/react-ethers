@@ -1,32 +1,68 @@
 import { ethers } from "ethers"
 import { Web3Provider, FallbackProvider } from "@ethersproject/providers"
+import { Reducer } from "react"
 
-export type ACTION = {
-  type: undefined | string
-  providerType: undefined | string | null
-  wrappedProvider: undefined | Web3Provider | FallbackProvider | null
-  providerSrc: undefined | string | null
-  networkName: undefined | string | null
-  chainId: undefined | string | number
-  account: undefined | string | null
-  balance: undefined | string | number
-  signer: undefined | any
+export const initialeState = {
+  providerType: null,
+  ethersProvider: null,
+  providerSrc: null,
+  networkName: null,
+  chainId: 0,
+  blockHeight: 0,
+  signer: null,
+  isLogged: false,
+  account: ethers.constants.AddressZero,
+  balance: 0,
 }
+
+export type ACTION =
+  | {
+      type: "SET_ETHERS_PROVIDER"
+      providerType: string | null
+      wrappedProvider: Web3Provider | FallbackProvider | null
+      providerSrc: string | null
+    }
+  | {
+      type: "SET_NETWORK"
+      networkName: string | null
+      chainId: string | number
+    }
+  | {
+      type: "SET_ACCOUNT"
+      account: string | null
+      signer: any
+    }
+  | { type: "SET_BALANCE"; balance: string | number }
+  | { type: "SET_BLOCK"; block: number }
+  | {
+      type: string | "DEFAULT"
+      providerType: string | null
+      wrappedProvider: Web3Provider | FallbackProvider | null
+      providerSrc: string | null
+      networkName: string | null
+      chainId: string | number
+      block: number
+      isLogged: boolean
+      account: string | null
+      balance: string | number
+      signer: any
+    }
 
 export type STATE = {
   providerType: string | null
   ethersProvider: null | any
   providerSrc: string | null
   networkName: string | null
-  isLogged: boolean
   chainId: string | number
+  blockHeight: string | number
+  isLogged: boolean
   account: string | null
   balance: string | number
   signer: any
 }
 
 // Reducer for maintain the hook state
-export const reducer = (state: STATE, action: ACTION) => {
+export const reducer: Reducer<STATE, ACTION> = (state, action) => {
   switch (action.type) {
     case "SET_ETHERS_PROVIDER":
       return {
@@ -58,9 +94,12 @@ export const reducer = (state: STATE, action: ACTION) => {
     case "SET_BALANCE":
       return { ...state, balance: action.balance }
 
+    case "SET_BLOCK":
+      return { ...state, blockHeight: action.block }
+
     default:
       throw new Error(
-        `useProviders: something went wrong in the reducer with the type: ${action.type}`
+        `useProviders: something went wrong in the reducer with the type ${action.type}`
       )
   }
 }
