@@ -1,5 +1,5 @@
 import detectEthereumProvider from "@metamask/detect-provider"
-import WalletConnectProvider from "@walletconnect/web3-provider"
+// import WalletConnectProvider from "@walletconnect/web3-provider"
 import { ethers } from "ethers"
 import { useEffect, useReducer, useRef, useState } from "react"
 import { reducer, initialeState } from "./reducer"
@@ -25,7 +25,7 @@ Metamask provider the easiest way to connect a blockchain, indeed Metamask injec
 So the except the connection is initiated with Wallet Connect, the hook will try to find the provider from Metamask
 */
 
-type PROVIDER = null | WalletConnectProvider | unknown
+type PROVIDER = null | unknown
 
 export type CustomNetwork = {
   chainId: number
@@ -60,6 +60,7 @@ export const useProviders = (customNetwork: CustomNetwork[]) => {
         console.log("connexion to WC")
         window.localStorage.clear()
         // Get wallet connect provider
+        /*
         const walletConnectProvider = new WalletConnectProvider({
           infuraId: INFURA_ID,
         })
@@ -69,6 +70,7 @@ export const useProviders = (customNetwork: CustomNetwork[]) => {
         } catch (e) {
           console.log(e)
         }
+        */
       } else {
         // Detect if Metamask is installed
         let metamaskProvider = await detectEthereumProvider()
@@ -305,6 +307,7 @@ export const useProviders = (customNetwork: CustomNetwork[]) => {
         } else {
           // If wallet connect
           console.log("wallet connect changed his network")
+          /*
           const walletConnectProvider = new WalletConnectProvider({
             infuraId: "3c717cd3192b470baedb127d89581a23",
           })
@@ -320,6 +323,7 @@ export const useProviders = (customNetwork: CustomNetwork[]) => {
             wrappedProvider: web3Provider,
             providerSrc: src,
           })
+          */
         }
       }
       ethersProvider.provider.on("chainChanged", chainChanged)

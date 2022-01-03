@@ -9,6 +9,10 @@
 ![](https://img.shields.io/badge/React-v17.0.2-blue)
 ![](https://img.shields.io/badge/TypeScript-v4.5.2-blue)
 
+## Current work
+
+Switching to Wallet Connect 2.0
+
 ## Description
 
 `react-ethers` was created to facilitate the use, in React, of [Ethers.js](https://docs.ethers.io/v5/) which is a library for interacting with Ethereum Blockchain. It aims to be a small dependencies which can be easily used in any React dApp.
