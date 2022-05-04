@@ -10,8 +10,11 @@ import {
   JsonRpcFetchFunc,
   Provider,
 } from "@ethersproject/providers"
-import { extractProvidersConfig, readNetwork } from "./utils"
+import { extractProvidersConfig, nameChainId, readNetwork } from "./utils"
 import { fetchCustomUrl, fetchUrl } from "./rpcPublicEndpoint"
+import { Network, ProviderSource } from "./types"
+import { getProvider } from "./utils/connect"
+import { getNetwork, getNetworkInterface } from "./utils/networks"
 
 /* 
 This is a hook to connect to blockchain through several provider.
@@ -25,131 +28,49 @@ Metamask provider the easiest way to connect a blockchain, indeed Metamask injec
 So the except the connection is initiated with Wallet Connect, the hook will try to find the provider from Metamask
 */
 
-type PROVIDER = null | unknown
-
-export type CustomNetwork = {
-  chainId: number
-  publicEndpoints: string[]
-}
-
-export const useProviders = (customNetwork: CustomNetwork[]) => {
-  // This state is internal, it store the provider which will be used.
-  const [provider, setProvider] = useState<PROVIDER>(null)
-
+export const useBlockchainConnect = (
+  customNetwork: Network[],
+  defaultNetwork: Network | "injected",
+  autoRefresh: boolean
+) => {
+  // ------------------ STATES ---------------------
+  const [providerConfig, setProviderConfig] = useState<ProviderSource>(null)
   const isMounted = useRef(false)
 
-  // State of the hook which will be exported
   const [state, dispatch] = useReducer(reducer, initialeState)
-  // Extraction of keys of the hook state
-  const { providerType, ethersProvider, networkName, account, providerSrc } =
-    state
+  const { provider } = state
 
-  // 1. Get a provider
-  // Some options are stored in the local storage to guide which provider the useEffect have to fetch
+  // ------------------------------- LOAD PROVIDER | ONLY ON LOAD/RELOAD
   useEffect(() => {
-    console.log("1. Get a provider")
-    // Read options in the local storage
-    const walletConnect = window.localStorage.getItem("wallet-connect")
-    const network = readNetwork()
+    // select the network, check if a desired network exist (localStorage)
+    const chainId = getNetwork(defaultNetwork)
 
+    // create network interface
+    const network = getNetworkInterface(chainId, customNetwork)
+
+    // get and store the providers
     ;(async () => {
-      // Connexion to wallet connect initiated
-      // Can't store the connection since the page is reloaded
-      if (walletConnect === "true") {
-        // connexion to WC
-        console.log("connexion to WC")
-        window.localStorage.clear()
-        // Get wallet connect provider
-        /*
-        const walletConnectProvider = new WalletConnectProvider({
-          infuraId: INFURA_ID,
-        })
-        try {
-          await walletConnectProvider.enable()
-          setProvider(walletConnectProvider)
-        } catch (e) {
-          console.log(e)
-        }
-        */
-      } else {
-        // Detect if Metamask is installed
-        let metamaskProvider = await detectEthereumProvider()
-        if (metamaskProvider) {
-          setProvider(metamaskProvider)
-        } else if (
-          [undefined, 1, 3, 4, 5, 42].includes(network as undefined | number)
-        ) {
-          // Metamask is not installed
-          // A default provider will be used in this case
-          // Options to add API key (will speed up the connection a lot)
-          const apiKeyOptions = {
-            infura: INFURA_ID,
-            etherscan: ETHERSCAN_ID,
-            alchemy: ALCHEMY_ID,
-            pocket: POCKET_ID,
-            quorum: 2, // 2 for mainnet, 1 for testnet
-          }
-
-          // A network is specified in the local storage
-          // If {network} is null, the mainnet (homestead) is choosed
-          const defaultProvider = ethers.getDefaultProvider(
-            network,
-            apiKeyOptions
-          )
-
-          // The quorum of providers selected by {getDefaultProvider} is extracted
-          // and will be used to create a FallbackProvider
-          const providersQuorum = extractProvidersConfig(
-            defaultProvider as FallbackProvider
-          )
-          setProvider(providersQuorum)
-        } else if ([56, 137].includes(network as number)) {
-          // create several provider from public endpoints
-          // for RPC endpoint saved in the library
-          // these providers will be used to create a Fallback provider
-          const endpoints = fetchUrl(network as number)
-          if (endpoints !== undefined) {
-            const providersQuorum = []
-            for (const endpoint of endpoints) {
-              try {
-                const jsonRPC = new ethers.providers.JsonRpcProvider(endpoint)
-                providersQuorum.push(jsonRPC)
-              } catch (e) {
-                console.error(e)
-              }
-            }
-            setProvider(providersQuorum)
-          } else {
-            setProvider([])
-          }
-        } else {
-          // use option for custom network
-          const endpoints = fetchCustomUrl(network as number, customNetwork)
-          const providersQuorum = []
-          for (const endpoint of endpoints) {
-            try {
-              const jsonRPC = new ethers.providers.JsonRpcProvider(endpoint)
-              providersQuorum.push(jsonRPC)
-            } catch (e) {
-              console.error(e)
-            }
-          }
-          setProvider(providersQuorum)
-        }
-      }
+      const providers = await getProvider(chainId === -1 ? "injected" : network)
+      setProviderConfig(providers)
     })()
   }, [])
 
+  /*
+  Separate useEffect when inject network?
+  Clean the connection read-only
+  Manage well the Signer (read-only, RO metamask, Signer without metamask)
+  */
+
   // 2. Wrap the provider(s) into a Ethers.JS provider configuration
   // And store it in the state of the hook
+
+  // ------------------ WRAP THE PROVIDER | RUN AFTER THE PROVIDER IS FOUND
   useEffect(() => {
     // Do not run on the first render
     if (!isMounted.current) {
       isMounted.current = true
     } else {
-      if (ethersProvider === null) {
-        console.log("2. Wrap the provider(s)")
-
+      if (provider === null) {
         // Try to wrap the providers into a Web3Provider (Metamask & Wallet Connect)
         try {
           const web3Provider = new ethers.providers.Web3Provider(
@@ -159,9 +80,9 @@ export const useProviders = (customNetwork: CustomNetwork[]) => {
           const src = web3Provider.connection.url
           dispatch({
             type: "SET_ETHERS_PROVIDER",
-            providerType: "Web3Provider",
-            wrappedProvider: web3Provider,
-            providerSrc: src,
+            // providerType: "Web3Provider",
+            // wrappedProvider: web3Provider,
+            // providerSrc: src,
           })
         } catch {
           // Create a fallback provider with the quorum of providers
@@ -197,7 +118,7 @@ export const useProviders = (customNetwork: CustomNetwork[]) => {
         dispatch({
           type: "SET_NETWORK",
           networkName: network.name,
-          chainId: network.chainId,
+          chainId: nameChainId(network.chainId),
         })
 
         // Get account information (only in Web3Provider)

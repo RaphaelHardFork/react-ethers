@@ -1,18 +1,26 @@
 import { ethers } from "ethers"
 import { Web3Provider, FallbackProvider } from "@ethersproject/providers"
 import { Reducer } from "react"
+import { networkNull } from "./utils/networks"
+import { Provider } from "./types"
 
 export const initialeState = {
-  providerType: null,
-  ethersProvider: null,
-  providerSrc: null,
-  networkName: null,
-  chainId: 0,
-  blockHeight: 0,
-  signer: null,
-  isLogged: false,
-  account: ethers.constants.AddressZero,
-  balance: 0,
+  network: networkNull,
+  account: {
+    isLogged: false,
+    address: ethers.constants.AddressZero,
+    balance: 0,
+    walletType: "",
+  },
+  autoRefresh: false,
+  type: "",
+  status: "",
+  provider: "",
+}
+
+export type ReducerAction = {
+  type: string
+  payload: Provider
 }
 
 export type ACTION =
@@ -62,7 +70,7 @@ export type STATE = {
 }
 
 // Reducer for maintain the hook state
-export const reducer: Reducer<STATE, ACTION> = (state, action) => {
+export const reducer: Reducer<Provider, ReducerAction> = (state, action) => {
   switch (action.type) {
     case "SET_ETHERS_PROVIDER":
       return {

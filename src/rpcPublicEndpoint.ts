@@ -1,6 +1,7 @@
-import { CustomNetwork } from "./useProviders"
+import { Network } from "./types"
+import { CustomNetwork } from "./useBlockchainConnect"
 
-export const fetchUrl = (chainId: number) => {
+export const getEndpoints = (chainId: number) => {
   switch (chainId) {
     case 137:
       // polygon
@@ -13,18 +14,20 @@ export const fetchUrl = (chainId: number) => {
       ]
 
     case 56:
-      // biance smart chain
+      // binance smart chain
       return [
         "https://bsc-dataseed.binance.org/",
         "https://bsc-dataseed1.defibit.io/",
         "https://bsc-dataseed1.ninicoin.io/",
       ]
+    default:
+      return []
   }
 }
 
-export const fetchCustomUrl = (
+export const getCustomEndpoints = (
   network: number,
-  customNetwork: CustomNetwork[]
+  customNetwork: Network[]
 ) => {
   for (const config of customNetwork) {
     if (config.chainId === network) {

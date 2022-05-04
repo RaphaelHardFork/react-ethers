@@ -1,10 +1,12 @@
 <p align="center">
-<img width='400px' src='./react-ethers.svg' alt='logo'/>
+<img width='400px' src='./assets/react-ethers.svg' alt='logo'/>
 </p>
 
 <h1 align="center"><b>React Ethers</b></h1>
 
 ![](https://img.shields.io/badge/React%20ethers-v1.0.1-lightgrey)
+![](https://img.shields.io/badge/Node-v17.3.0-orange)
+![](https://img.shields.io/badge/npm-v8.3.0-orange)
 ![](https://img.shields.io/badge/Ethers.js-v5.5.1-green)
 ![](https://img.shields.io/badge/React-v17.0.2-blue)
 ![](https://img.shields.io/badge/TypeScript-v4.5.2-blue)
@@ -340,7 +342,7 @@ You can contribute by:
 
 <hr>
 <div align="center">
-<img width='30px' src='./ethereum.png' alt='logo'/>
-<img width='45px' src='./polygon.png' alt='logo'/>
+<img width='30px' src='./assets/ethereum.png' alt='logo'/>
+<img width='45px' src='./assets/polygon.png' alt='logo'/>
 </div>
 <h3 align='center'><b>react-ethers.wallet | 0x2437e49fe22a90565811dceccbe14dce98e9c086</b></h3>

@@ -62,6 +62,39 @@ export const useCall = () => {
             params[4]
           )
           break
+        case 6:
+          result = await contract[functionName](
+            params[0],
+            params[1],
+            params[2],
+            params[3],
+            params[4],
+            params[5]
+          )
+          break
+        case 7:
+          result = await contract[functionName](
+            params[0],
+            params[1],
+            params[2],
+            params[3],
+            params[4],
+            params[5],
+            params[6]
+          )
+          break
+        case 8:
+          result = await contract[functionName](
+            params[0],
+            params[1],
+            params[2],
+            params[3],
+            params[4],
+            params[5],
+            params[6],
+            params[7]
+          )
+          break
         default:
           console.log("Wrong number of params")
       }
@@ -87,10 +120,12 @@ export const useCall = () => {
   const contractCall = async (
     contract: ContractInstance,
     functionName: string,
-    params: Array<any>
+    params: Array<any>,
+    value: string | number | undefined
   ) => {
     if (contract === null) throw new Error("Contract instance is not set")
     if (params === undefined) params = []
+    if (value === undefined) value = 0
     let tx
     try {
       setStatus("Waiting for confirmation")
@@ -98,23 +133,26 @@ export const useCall = () => {
       // transaction
       switch (params.length) {
         case 0:
-          tx = await contract[functionName]()
+          tx = await contract[functionName]({ value })
           break
         case 1:
-          tx = await contract[functionName](params[0]) // .functionName
+          tx = await contract[functionName](params[0], { value }) // .functionName
           break
         case 2:
-          tx = await contract[functionName](params[0], params[1])
+          tx = await contract[functionName](params[0], params[1], { value })
           break
         case 3:
-          tx = await contract[functionName](params[0], params[1], params[2])
+          tx = await contract[functionName](params[0], params[1], params[2], {
+            value,
+          })
           break
         case 4:
           tx = await contract[functionName](
             params[0],
             params[1],
             params[2],
-            params[3]
+            params[3],
+            { value }
           )
           break
         case 5:
@@ -123,7 +161,44 @@ export const useCall = () => {
             params[1],
             params[2],
             params[3],
-            params[4]
+            params[4],
+            { value }
+          )
+          break
+        case 6:
+          tx = await contract[functionName](
+            params[0],
+            params[1],
+            params[2],
+            params[3],
+            params[4],
+            params[5],
+            { value }
+          )
+          break
+        case 7:
+          tx = await contract[functionName](
+            params[0],
+            params[1],
+            params[2],
+            params[3],
+            params[4],
+            params[5],
+            params[6],
+            { value }
+          )
+          break
+        case 8:
+          tx = await contract[functionName](
+            params[0],
+            params[1],
+            params[2],
+            params[3],
+            params[4],
+            params[5],
+            params[6],
+            params[7],
+            { value }
           )
           break
         default:
