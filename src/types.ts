@@ -1,7 +1,12 @@
-import { Web3Provider, FallbackProvider } from "@ethersproject/providers"
-import { ethers } from "ethers"
+import {
+  Web3Provider,
+  FallbackProvider,
+  BaseProvider,
+  JsonRpcSigner,
+} from "@ethersproject/providers"
 
-export interface Network {
+// --- network ---
+export type Network = {
   name: string
   chainId: number
   blockHeight: number
@@ -9,24 +14,48 @@ export interface Network {
   explorerUrl: string
 }
 
+// --- account ---
 export interface Account {
   isLogged: boolean
   address: string
   balance: string | number
   walletType: string
+  signer: JsonRpcSigner
 }
 
-export interface Provider {
+// --- provider ---
+export type Provider = null | Web3Provider | FallbackProvider | BaseProvider
+
+// --- connection type ---
+export type ConnectionType = "not initialized" | "injected" | "endpoints"
+
+// --- config ---
+export interface Config {
+  connectionType: ConnectionType
+  customNetworks: Network[]
+  chainId: number
+  apiKeys: ApiKeysOption
+}
+
+// --- context load ---
+export type ContextLoad = {
+  connectionType: ConnectionType
+  methods: {
+    launchConnection: (connectionType: ConnectionType) => void
+    setAutoRefresh: (setTo: boolean) => void
+    switchNetwork: (chainId: number) => void
+    loginToInjected: () => void
+  }
+  provider: Provider
   network: Network
   account: Account
-  autoRefresh: boolean
-  type: string
-  status: ConnectionStatus
-  provider: string | Web3Provider | FallbackProvider
 }
 
-// at the loading of the page
-export type ProviderSource = null | unknown | ethers.providers.JsonRpcProvider[]
-
-// states of the proivders loading
-export type ConnectionStatus = "Looking for network to connect"
+// --- apikeys option ---
+export type ApiKeysOption = {
+  infura: string | undefined
+  etherscan: string | undefined
+  alchemy: string | undefined
+  pocket: string | undefined
+  quorum: number
+}

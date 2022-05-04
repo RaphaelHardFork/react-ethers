@@ -1,6 +1,6 @@
 {
   "name": "react-ethers",
-  "version": "1.5.0",
+  "version": "1.8.0",
   "main": "index.js",
   "repository": "https://github.com/RaphaelHardFork/react-ethers.git",
   "author": "RaphaelHardFork <raphael.pellet@protonmail.com>",
