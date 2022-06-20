@@ -2,7 +2,7 @@
 <img width='400px' src='./assets/react-ethers.svg' alt='logo'/>
 </p>
 
-<h1 align="center"><b>React Ethers</b></h1>
+<h1 align="center"><b>React Ethers</b> v1.8.0</h1>
 
 ![](https://img.shields.io/badge/React%20ethers-v1.0.1-lightgrey)
 ![](https://img.shields.io/badge/Node-v17.3.0-orange)
@@ -11,16 +11,18 @@
 ![](https://img.shields.io/badge/React-v17.0.2-blue)
 ![](https://img.shields.io/badge/TypeScript-v4.5.2-blue)
 
-## Current work
+# Current work
 
-Switching to Wallet Connect 2.0
+- many errors are not handled
+- Add wallet connect v1, then v2
+- detect web extensions
 
-## Description
+# Description
 
-`react-ethers` was created to facilitate the use, in React, of [Ethers.js](https://docs.ethers.io/v5/) which is a library for interacting with Ethereum Blockchain. It aims to be a small dependencies which can be easily used in any React dApp.
+`react-ethers` was created to facilitate the use, in React, of [Ethers.js](https://docs.ethers.io/v5/) which is a library for interacting with Ethereum Blockchain. It aims to be a small dependence which can be easily used in any React dApp.
 
 - [Installation](https://github.com/RaphaelHardFork/react-ethers#installation)
-- [Usage in the dApp](https://github.com/RaphaelHardFork/react-ethers#usage-in-the-dapp)
+- [Usage in your dApp](https://github.com/RaphaelHardFork/react-ethers#usage-in-the-dapp)
   - [Wrap the dApp](https://github.com/RaphaelHardFork/react-ethers#wrap-your-app-with-the-web3contextprovider)
   - [Get blockchain informations](https://github.com/RaphaelHardFork/react-ethers#get-blockchain-informations)
   - [Connect Metamask](https://github.com/RaphaelHardFork/react-ethers#connect-metamask)
@@ -34,275 +36,239 @@ Switching to Wallet Connect 2.0
 - [Improvment for V2](https://github.com/RaphaelHardFork/react-ethers#improvment-for-v2)
 - [Contribute](https://github.com/RaphaelHardFork/react-ethers#contribution)
 
-## Installation
+# Installation
 
 ```
 yarn add react-ethers
 ```
 
-## Usage in the dApp
+# Usage in your dApp
 
-### Wrap your app with the `Web3ContextProvider`
+## Wrap your app with `EVMContext`
 
 ```js
 // src/index.js
-import { Web3ContextProvider } from "react-ethers"
+import { EVMContext } from "react-ethers"
 
 ReactDOM.render(
   <React.StrictMode>
-    <Web3ContextProvider>
+    <EVMContext>
       <App />
-    </Web3ContextProvider>
+    </EVMContext>
   </React.StrictMode>,
   document.getElementById("root")
 )
 ```
 
-### Get blockchain informations
+## Get blockchain informations
 
 ```js
 // src/Dapp.js
-import { useWeb3 } from "react-ethers"
+import { useEVM } from "react-ethers"
 
 const Dapp = () => {
-  const { state } = useWeb3()
-  const {
-    providerType: String,
-    ethersProvider: {Web3Provider | FallbackProvider},
-    providerSrc: String,
-    networkName: String,
-    chainId: Number,
-    blockHeight: Number,
-    isLogged: Boolean,
-    signer: {JsonRpcSigner | null},
-    account: String, // address zero as default
-    balance: BigNumber,
-  } = state
+  const { network, account, provider, methods, connectionType } = useEVM()
+
+  return <>...</>
 }
+```
+
+**Available informations & methods:**
+
+```ts
+// --- provider ---
+type Provider = null | Web3Provider | FallbackProvider | BaseProvider
+
+// --- network ---
+type Network = {
+  name: string
+  chainId: number
+  blockHeight: number
+  publicEndpoints: string[]
+  explorerUrl: string
+}
+
+// --- account ---
+interface Account {
+  isLogged: boolean
+  address: string
+  balance: string | number
+  walletType: string
+  signer: JsonRpcSigner
+}
+
+// --- methods ---
+type Methods = {
+  launchConnection: (connectionType: ConnectionType) => void
+  setAutoRefresh: (setTo: boolean) => void
+  switchNetwork: (chainId: number) => void
+  loginToInjected: () => void
+}
+
+// --- connection type ---
+type ConnectionType = "not initialized" | "injected" | "endpoints"
 ```
 
 References:  
 [Web3Provider](https://docs.ethers.io/v5/api/providers/other/#Web3Provider)  
 [FallbackProvider](https://docs.ethers.io/v5/api/providers/other/#FallbackProvider)  
-[JsonRpcSigner](https://docs.ethers.io/v5/api/providers/jsonrpc-provider/#JsonRpcSigner)  
-[BigNumber](https://docs.ethers.io/v5/api/utils/bignumber/#BigNumber)
+[JsonRpcSigner](https://docs.ethers.io/v5/api/providers/jsonrpc-provider/#JsonRpcSigner)
 
-### Connect Metamask
+## Launch connection
+
+You can either launch the connection with the web extensions (`injected`) or through `endpoints`
 
 ```js
-// src/Dapp.js
-import { useWeb3 } from "react-ethers"
+import { useEVM } from "react-ethers"
 
 const Dapp = () => {
-  const { connectToMetamask } = useWeb3()
+  const { methods } = useEVM()
 
   {...}
 
   return <>
-    <button onClick={connectToMetamask}>
-      Connect Metamask
+    <button onClick={() => methods.launchConnection("injected")}>
+      Launch connection
     </button>
   </>
 }
 ```
 
-_Do nothing if the provider do not come from Metamask_
-
-### Switch network
-
-```js
-// src/Dapp.js
-import { useWeb3 } from "react-ethers"
-
-const Dapp = () => {
-  const { switchNetwork } = useWeb3()
-
-  {...}
-
-  return <>
-    <button onClick={() => switchNetwork("0x4")}>Rinkeby</button>
-  </>
-}
-```
-
-Do not work with **Wallet Connect** and with **Metamask (in read-only / locked)**. With a Fallback provider the page is reload with the switched network in option.  
-This function take the chainId in string of the hexadecimal value.  
-**All network added to Metamask are supported.** To add new network go to https://chainlist.org/
-
-To use new network without metamask you can add RPC endpoints to the `Web3ContextProvider`:
+By launching your connection with `endpoints` you will start by default on **rinkeby network (4)**. This can be changed with a configuration of the `EVMContext`:
 
 ```js
 // src/index.js
+import { EVMContext } from "react-ethers"
+
 ReactDOM.render(
   <React.StrictMode>
-      <Web3ContextProvider
-        customNetwork={[
-          {
-            chainId: 43114,
-            publicEndpoints: ["https://api.avax.network/ext/bc/C/rpc"],
-          },
-        ]}
-      >
-        <App />
-      </Web3ContextProvider>
+    <EVMContext defaultConnectionType="endpoints" chainId={1}>
+      <App />
+    </EVMContext>
   </React.StrictMode>,
   document.getElementById("root")
+)
 ```
 
-You can add several networks and several RPC endpoints.
+You can also set `defaultConnectionType` to fix which connection type should be use when the dApp is launched.
 
-### Connect with Wallet Connect
+## Connect Metamask
 
-The page is reload with an option to connect to Wallet Connect.
+The `connectionType` must be `injected`
 
 ```js
-// src/Dapp.js
-import { useWeb3 } from "react-ethers"
+import { useEVM } from "react-ethers"
 
 const Dapp = () => {
-  const { wcConnect } = useWeb3()
+  const { methods, account } = useEVM()
 
   {...}
 
   return <>
-    <button onClick={wcConnect}>
-    Connect with Wallet Connect
+    <button onClick={() => methods.loginToInjected()}>
+      Connect Metamask
     </button>
+    {account.isLogged ? (
+        <p>Connected with {account.address}</p>
+      ) : (
+        <p>Not connected</p>
+      )}
   </>
 }
 ```
 
-_Operations with wallet connect are still in progress_
+_Do nothing if the `connectionType` is not on `injected`_
 
-### Create a contract instance
+Once connected you can access informations from `account`. There is no methods to disconnected the wallet, users have to do so (for securities reasons).
+
+## Switch network
 
 ```js
-// src/Dapp.js
+import { useEVM } from "react-ethers"
+
+const Dapp = () => {
+  const { methods } = useEVM()
+
+  {...}
+
+  return <>
+      <button onClick={() => methods.switchNetwork(1)}>
+        Switch to Mainnet
+      </button>
+  </>
+}
+```
+
+When the connection is `injected` this will open the wallet to confirm the switch of the network. All networks registered (on https://chainlist.org/ for exemple) in your web extensions are supported.
+
+With `endpoints` the page is reloaded on the chosen network. The network should be specified in `react-ethers` or in the `EVMContext` configuration:
+
+```js
+// src/index.js
+import { EVMContext } from "react-ethers"
+
+ReactDOM.render(
+  <React.StrictMode>
+    <EVMContext
+      customNetworks={[
+        {
+          name: "Aurora Mainnet",
+          chainId: 1313161554,
+          blockHeight: 0,
+          publicEndpoints: ["https://mainnet.aurora.dev"],
+          explorerUrl: "https://aurorascan.dev/",
+        },
+        {
+          name: "Aurora Testnet",
+          chainId: 1313161555,
+          blockHeight: 0,
+          publicEndpoints: ["https://testnet.aurora.dev"],
+          explorerUrl: "https://testnet.aurorascan.dev/",
+        },
+      ]}
+    >
+      <App />
+    </EVMContext>
+  </React.StrictMode>,
+  document.getElementById("root")
+)
+```
+
+You can provide a list of endpoints in `publicEndpoints`
+
+## Create a contract instance
+
+```js
 import { useContract } from "react-ethers"
+import contracts from "./contracts.json"
 
 const Dapp = () => {
-  const contract = useContract(contractAddress, contractABI)
+  const { ropsten } = contracts
 
-  {...}
+  const token = useContract(
+    ropsten.FungibleToken.address,
+    ropsten.FungibleToken.abi
+  )
 
-  async function read(){
-    // try / catch if network is not controlled
-    const totalSupply = await contract.totalSupply()
+  async function read() {
+    let supply
+    try {
+      supply = await token.totalSupply(anyAddress)
+    } catch (e) {
+      console.log(e)
+    }
+    console.log(supply)
   }
-
-  return <>
-    <button onClick={read}>
-    Total Supply
-    </button>
-  </>
-}
-```
-
-This hook **must be used in a context** in order to prevent the creation of multiple instance of a contract. Especially if we want to listen event on this contract.  
-If there is no signer, the contract instance is it read-only.  
- **To get this information, call:**  
-`contract.signer` (should return `null` if there is no signer)
-
-### Do a call on a contract
-
-```js
-// src/Dapp.js
-import { useCall } from "react-ethers"
-
-const Dapp = () => {
-  const contract = useContract(contractAddress, contractABI)
-  const { readContract, contractCall } = useCall()
-
-  {...}
-
-  async function call(){
-    const functionName = "transfer" // String correspond to the function name
-    const params = ["0x435f4...2et68", 20 * 10 ** 18] // list of parameter in the order
-    await contractCall(contract, functionName, params)
-  }
-
-  async function read(){
-    const totalSupply = await readContract(contract, "totalSupply")
-    const balance = await readContract(contract, "balanceOf", ["0x4564...2Dg5"])
-  }
-
-  return <>
-    <button onClick={call}>
-    Transfer
-    </button>
-
-    <button onClick={read}>
-    Total Supply & balance
-    </button>
-  </>
-}
-```
-
-The hook provider also a `status` state, which indicate either the transaction is in:
-
-- **"Waiting for comfirmation"**: user must accept transaction on the wallet interface
-- **"Pending"**: transaction waiting to be mined
-- **"Success"**: transaction success
-- **"Failed"**: transaction failed
-
-The `tx` which is the [transaction object](https://docs.ethers.io/v5/api/providers/types/#types--transactions) and the `errorMessage` in case of revert. Which are empty strings by default.
-
-```js
-const Dapp = () => {
-  const contract = useContract(contractAddress, contractABI)
-  const { contractCall, status, tx, errorMessage } = useCall()
-
-  {...}
-
-  async function approve(){
-    await contractCall(contract, "approve", [
-      "0x3eB876042A00685c75Cfe1fa2Ee496615e3aef8b",
-      10000,
-    ])
-  }
-
-  return <>
-    <button onClick={read}>
-    Total Supply
-    </button>
-
-
-    <button
-      disabled={
-        status.startsWith("Pending") ||
-        status.startsWith("Waiting")
-      }
-      onClick={approve}>
-    Approve
-    </button>
-
-    {tx !== null ? <p>Transaction hash: {tx?.hash}</p> : ''}
-    {errorMessage !== '' ? <p>Error: {errorMessage}</p> : ''}
-  </>
-}
-```
-
-### Tools
-
-You can use `readNumber` to read big number from contract method or providers.
-
-```js
-// src/Dapp.js
-import { useWeb3 } from "react-ethers"
-
-const Dapp = () => {
-  const { state, readNumber } = useWeb3()
-  const { balance } = state
-
-  const decimal = 18
 
   return (
     <>
-      <p>Balance: {readNumber(balance, decimal)} ETH</p>
+      <button onClick={read}>Log Total Supply</button>
     </>
   )
 }
 ```
+
+To avoid create multiple instance of your contract, consider using `useContract` hook in a context or a single component.
 
 ## API keys
 
@@ -318,16 +284,6 @@ REACT_APP_POCKET_ID=""
 ## React-Ethers in action
 
 Visit the template dApp and go through the code.
-
-## Improvment for V2
-
-Convertion into a full typescript code.
-
-Add custom hooks to use ERC20/721/1155.
-
-Handle utilisation of ProxyContract (if needed)
-
-Link to the explorer, display name of network well
 
 ## Contribution
 

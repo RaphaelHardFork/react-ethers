@@ -5,6 +5,9 @@ import {
   JsonRpcSigner,
 } from "@ethersproject/providers"
 
+// --- provider ---
+export type Provider = null | Web3Provider | FallbackProvider | BaseProvider
+
 // --- network ---
 export type Network = {
   name: string
@@ -23,8 +26,13 @@ export interface Account {
   signer: JsonRpcSigner
 }
 
-// --- provider ---
-export type Provider = null | Web3Provider | FallbackProvider | BaseProvider
+// --- methods ---
+export type Methods = {
+  launchConnection: (connectionType: ConnectionType) => void
+  setAutoRefresh: (setTo: boolean) => void
+  switchNetwork: (chainId: number) => void
+  loginToInjected: () => void
+}
 
 // --- connection type ---
 export type ConnectionType = "not initialized" | "injected" | "endpoints"
@@ -40,12 +48,7 @@ export interface Config {
 // --- context load ---
 export type ContextLoad = {
   connectionType: ConnectionType
-  methods: {
-    launchConnection: (connectionType: ConnectionType) => void
-    setAutoRefresh: (setTo: boolean) => void
-    switchNetwork: (chainId: number) => void
-    loginToInjected: () => void
-  }
+  methods: Methods
   provider: Provider
   network: Network
   account: Account
