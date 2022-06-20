@@ -13,6 +13,7 @@ import { useInjection } from "./hooks/useInjection"
 import { useSigner } from "./hooks/useSigner"
 import { Web3Provider } from "@ethersproject/providers"
 import { defaultApiOption } from "./utils/createFallbackProvider"
+import detectEthereumProvider from "@metamask/detect-provider"
 
 export type Props = {
   children: ReactNode
@@ -112,6 +113,16 @@ export const EVMContext = ({
         console.log(`Account: ${account[0]} is connected`)
       }
     }
+  }
+
+  async function haveWebExtension() {
+    let ethereum
+    try {
+      ethereum = await detectEthereumProvider()
+    } catch (e) {
+      console.log(e)
+    }
+    return ethereum ? true : false
   }
 
   useEndpoints(
