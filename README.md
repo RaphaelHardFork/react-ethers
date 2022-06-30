@@ -106,7 +106,6 @@ type Methods = {
   setAutoRefresh: (setTo: boolean) => void
   switchNetwork: (chainId: number) => void
   loginToInjected: () => void
-  haveWebExtension: () => Promise<boolean>
   createVoidSigner: (address: string) => void
   deleteVoidSigner: () => void
   getNetworkList: () => Network[]
@@ -117,6 +116,7 @@ type ConnectionType = "not initialized" | "injected" | "endpoints"
 
 // --- others ---
 autoRefreshActive: boolean
+haveWebExtension: boolean
 ```
 
 EthersJS References:  
@@ -129,7 +129,7 @@ EthersJS References:
 There two type of connections:
 
 - `injected`: using the web extensions to connect the blockchain (so through INFURA in the case of the basic configuration of Metamask for exemple). The provider is connected by default on the chosen network in the web extension, if this network is not known by `EVMContext` this will set the name of the network as `Network null (chainID:0)`.  
-  You can use `methods.haveWebExtension` to check if the user have an extension installed (`window.ethereum` injected).  
+  You can use `haveWebExtension` to check if the user have an extension installed (`window.ethereum` injected).  
   Caution: this is mainly tested with Metamask
 
 - `endpoints`: using one or several endpoints to connect the blockchain. It use a `FallbackProvider` (witch use a quorum of provider). By default the network is set to `Ethereum Rinkeby testnet (chainID:4)`.  
