@@ -33,7 +33,6 @@ export type Methods = {
   setAutoRefresh: (setTo: boolean) => void
   switchNetwork: (chainId: number) => void
   loginToInjected: () => void
-  haveWebExtension: () => Promise<boolean>
   createVoidSigner: (address: string) => void
   deleteVoidSigner: () => void
   getNetworkList: () => Network[]
@@ -54,6 +53,7 @@ export interface Config {
 export type ContextLoad = {
   connectionType: ConnectionType
   autoRefreshActive: boolean
+  haveWebExtension: boolean
   methods: Methods
   provider: Provider
   network: Network

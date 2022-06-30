@@ -9,6 +9,7 @@ export const useEVM = () => {
     methods,
     connectionType,
     autoRefreshActive,
+    haveWebExtension,
   } = useContext(Context)
 
   if (provider === undefined) {
@@ -24,5 +25,6 @@ export const useEVM = () => {
     methods,
     connectionType,
     autoRefreshActive,
+    haveWebExtension,
   } as const
 }

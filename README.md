@@ -2,7 +2,7 @@
 <img width='400px' src='./assets/react-ethers.svg' alt='logo'/>
 </p>
 
-<h1 align="center"><b>React Ethers</b> v1.8.1</h1>
+<h1 align="center"><b>React Ethers</b> v1.8.2</h1>
 
 ![](https://img.shields.io/badge/Node-v16.15.0-orange)
 ![](https://img.shields.io/badge/npm-v8.3.0-orange)

@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useState } from "react"
+import React, { createContext, ReactNode, useEffect, useState } from "react"
 import {
   Account,
   ApiKeysOption,
@@ -13,7 +13,6 @@ import { useInjection } from "./hooks/useInjection"
 import { useSigner } from "./hooks/useSigner"
 import { Web3Provider } from "@ethersproject/providers"
 import { defaultApiOption } from "./utils/createFallbackProvider"
-import detectEthereumProvider from "@metamask/detect-provider"
 import { ethers } from "ethers"
 import { defaultNetworks, knownNetworks } from "./utils/createNetworkInterface"
 
@@ -54,6 +53,9 @@ export const EVMContext = ({
 
   // Void Signer
   const [voidSigner, setVoidSigner] = useState(false)
+
+  // haveWebExtension
+  const [haveWebExtension, setHaveWebExtension] = useState(false)
 
   // provider
   const [provider, setProvider] = useState<Provider>(null)
@@ -129,16 +131,6 @@ export const EVMContext = ({
     }
   }
 
-  async function haveWebExtension() {
-    let ethereum
-    try {
-      ethereum = await detectEthereumProvider()
-    } catch (e) {
-      console.log(e)
-    }
-    return ethereum ? true : false
-  }
-
   async function createVoidSigner(address: string) {
     if (address.length !== 42 && !address.startsWith("0x")) {
       console.warn("Wrong address format")
@@ -178,6 +170,17 @@ export const EVMContext = ({
     return list
   }
 
+  useEffect(() => {
+    try {
+      setTimeout(() => {
+        const ethereum = (window as any).ethereum
+        setHaveWebExtension(ethereum ? true : false)
+      }, 3000)
+    } catch (e) {
+      console.warn("You don't have any web extension to connect to the dApp")
+    }
+  }, [])
+
   useEndpoints(
     connectionType,
     setProvider,
@@ -202,13 +205,13 @@ export const EVMContext = ({
       value={{
         connectionType,
         autoRefreshActive,
+        haveWebExtension,
         provider,
         methods: {
           launchConnection,
           setAutoRefresh,
           switchNetwork,
           loginToInjected,
-          haveWebExtension,
           createVoidSigner,
           deleteVoidSigner,
           getNetworkList,
