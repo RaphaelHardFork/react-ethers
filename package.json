@@ -1,6 +1,6 @@
 {
   "name": "react-ethers",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "main": "index.js",
   "repository": "https://github.com/RaphaelHardFork/react-ethers.git",
   "author": "RaphaelHardFork <raphael.pellet@protonmail.com>",
@@ -9,10 +9,10 @@
     "@metamask/detect-provider": "^1.2.0",
     "@types/node": "^17.0.5",
     "@types/react": "^17.0.38",
-    "ethers": "^5.5.4",
+    "ethers": "^5.6.9",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "typescript": "^4.6.2"
+    "typescript": "^4.7.4"
   },
   "scripts": {
     "clean": "rm -rf dist",

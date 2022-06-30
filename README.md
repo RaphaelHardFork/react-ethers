@@ -2,49 +2,48 @@
 <img width='400px' src='./assets/react-ethers.svg' alt='logo'/>
 </p>
 
-<h1 align="center"><b>React Ethers</b> v1.8.0</h1>
+<h1 align="center"><b>React Ethers</b> v1.8.1</h1>
 
-![](https://img.shields.io/badge/React%20ethers-v1.0.1-lightgrey)
-![](https://img.shields.io/badge/Node-v17.3.0-orange)
+![](https://img.shields.io/badge/Node-v16.15.0-orange)
 ![](https://img.shields.io/badge/npm-v8.3.0-orange)
-![](https://img.shields.io/badge/Ethers.js-v5.5.1-green)
+![](https://img.shields.io/badge/nvm-v0.38.0-orange)
+![](https://img.shields.io/badge/Ethers.js-v5.6.9-green)
 ![](https://img.shields.io/badge/React-v17.0.2-blue)
-![](https://img.shields.io/badge/TypeScript-v4.5.2-blue)
+![](https://img.shields.io/badge/TypeScript-v4.7.4-blue)
 
-# Current work
+_Waiting for `WalletConnectV2` stable release and want ot see this library in `Rust`_
 
-- many errors are not handled
-- Add wallet connect v1, then v2
-- detect web extensions
+# Current work 👷
+
+- fix errors that are not handled
 
 # Description
 
 `react-ethers` was created to facilitate the use, in React, of [Ethers.js](https://docs.ethers.io/v5/) which is a library for interacting with Ethereum Blockchain. It aims to be a small dependence which can be easily used in any React dApp.
 
-- [Installation](https://github.com/RaphaelHardFork/react-ethers#installation)
 - [Usage in your dApp](https://github.com/RaphaelHardFork/react-ethers#usage-in-the-dapp)
-  - [Wrap the dApp](https://github.com/RaphaelHardFork/react-ethers#wrap-your-app-with-the-web3contextprovider)
+  - [Installation](https://github.com/RaphaelHardFork/react-ethers#installation)
   - [Get blockchain informations](https://github.com/RaphaelHardFork/react-ethers#get-blockchain-informations)
-  - [Connect Metamask](https://github.com/RaphaelHardFork/react-ethers#connect-metamask)
+  - [Launch connection]()
+  - [Connect Web extension](https://github.com/RaphaelHardFork/react-ethers#connect-metamask)
+  - [Auto refresh]()
   - [Switch network](https://github.com/RaphaelHardFork/react-ethers#switch-network)
-  - [Connect Wallet Connect](https://github.com/RaphaelHardFork/react-ethers#connect-with-wallet-connect)
+  - [Create a void signer]()
   - [Create a contract instance](https://github.com/RaphaelHardFork/react-ethers#create-a-contract-instance)
-  - [Do a call on a contract](https://github.com/RaphaelHardFork/react-ethers#do-a-call-on-a-contract)
-  - [Tools](https://github.com/RaphaelHardFork/react-ethers#tools)
 - [API keys](https://github.com/RaphaelHardFork/react-ethers#api-keys)
-- [How it's work](https://github.com/RaphaelHardFork/react-ethers#react-ethers-in-action)
-- [Improvment for V2](https://github.com/RaphaelHardFork/react-ethers#improvment-for-v2)
 - [Contribute](https://github.com/RaphaelHardFork/react-ethers#contribution)
 
-# Installation
+# Usage in your dApp
+
+## Installation
 
 ```
 yarn add react-ethers
 ```
 
-# Usage in your dApp
-
 ## Wrap your app with `EVMContext`
+
+Use it with zero config:
 
 ```js
 // src/index.js
@@ -59,6 +58,10 @@ ReactDOM.render(
   document.getElementById("root")
 )
 ```
+
+See how to add a config
+
+_(still using React17 for the moment)_
 
 ## Get blockchain informations
 
@@ -103,20 +106,34 @@ type Methods = {
   setAutoRefresh: (setTo: boolean) => void
   switchNetwork: (chainId: number) => void
   loginToInjected: () => void
+  haveWebExtension: () => Promise<boolean>
+  createVoidSigner: (address: string) => void
+  deleteVoidSigner: () => void
+  getNetworkList: () => Network[]
 }
 
 // --- connection type ---
 type ConnectionType = "not initialized" | "injected" | "endpoints"
+
+// --- others ---
+autoRefreshActive: boolean
 ```
 
-References:  
+EthersJS References:  
 [Web3Provider](https://docs.ethers.io/v5/api/providers/other/#Web3Provider)  
 [FallbackProvider](https://docs.ethers.io/v5/api/providers/other/#FallbackProvider)  
 [JsonRpcSigner](https://docs.ethers.io/v5/api/providers/jsonrpc-provider/#JsonRpcSigner)
 
 ## Launch connection
 
-You can either launch the connection with the web extensions (`injected`) or through `endpoints`
+There two type of connections:
+
+- `injected`: using the web extensions to connect the blockchain (so through INFURA in the case of the basic configuration of Metamask for exemple). The provider is connected by default on the chosen network in the web extension, if this network is not known by `EVMContext` this will set the name of the network as `Network null (chainID:0)`.  
+  You can use `methods.haveWebExtension` to check if the user have an extension installed (`window.ethereum` injected).  
+  Caution: this is mainly tested with Metamask
+
+- `endpoints`: using one or several endpoints to connect the blockchain. It use a `FallbackProvider` (witch use a quorum of provider). By default the network is set to `Ethereum Rinkeby testnet (chainID:4)`.  
+  Useful for users who don't have a web extension and want to read blockchain informations.
 
 ```js
 import { useEVM } from "react-ethers"
@@ -128,13 +145,18 @@ const Dapp = () => {
 
   return <>
     <button onClick={() => methods.launchConnection("injected")}>
-      Launch connection
+      Launch connection with web extension
+    </button>
+    <button onClick={() => methods.launchConnection("endpoints")}>
+      Launch connection with endpoints
     </button>
   </>
 }
 ```
 
-By launching your connection with `endpoints` you will start by default on **rinkeby network (4)**. This can be changed with a configuration of the `EVMContext`:
+To avoid any conflicts it is better to reload the page if you want to change the `connectionType`
+
+You can config the default connection type by passing the `defaultConnectionType` to the `EVMContext`:
 
 ```js
 // src/index.js
@@ -150,11 +172,9 @@ ReactDOM.render(
 )
 ```
 
-You can also set `defaultConnectionType` to fix which connection type should be use when the dApp is launched.
+## Connect Web extension
 
-## Connect Metamask
-
-The `connectionType` must be `injected`
+Only on `injected` `connectionType`
 
 ```js
 import { useEVM } from "react-ethers"
@@ -170,6 +190,11 @@ const Dapp = () => {
     </button>
     {account.isLogged ? (
         <p>Connected with {account.address}</p>
+        <p>Wallet type: {account.walletType}</p>
+        <p>Balance: {account.balance}</p>
+        <button onClick={() => console.log(account.signer)}>
+            Log signer
+          </button>
       ) : (
         <p>Not connected</p>
       )}
@@ -177,9 +202,54 @@ const Dapp = () => {
 }
 ```
 
-_Do nothing if the `connectionType` is not on `injected`_
+Once connected you can access informations from `account`.
 
-Once connected you can access informations from `account`. There is no methods to disconnected the wallet, users have to do so (for securities reasons).
+There is no methods to disconnected the wallet, users have to do it directly on the wallet.
+
+## Auto refresh
+
+`autoRefreshActive` is set by default to `true`, it listen block on the provider and update the state (update balance if account is connected for exemple). You can disable by default in the `EVMContext` config:
+
+```js
+// src/index.js
+import { EVMContext } from "react-ethers"
+
+ReactDOM.render(
+  <React.StrictMode>
+    <EVMContext autoRefresh={false}>
+      <App />
+    </EVMContext>
+  </React.StrictMode>,
+  document.getElementById("root")
+)
+```
+
+Or by using `methods.setAutoRefresh`:
+
+```js
+import { useEVM } from "react-ethers"
+
+const Dapp = () => {
+  const { methods, autoRefreshActive } = useEVM()
+
+  {...}
+
+  return <>
+    <button
+        disabled={autoRefreshActive}
+        onClick={() => methods.setAutoRefresh(true)}
+      >
+        On
+      </button>
+    <button
+        disabled={!autoRefreshActive}
+        onClick={() => methods.setAutoRefresh(false)}
+      >
+        Off
+      </button>
+  </>
+}
+```
 
 ## Switch network
 
@@ -199,7 +269,7 @@ const Dapp = () => {
 }
 ```
 
-When the connection is `injected` this will open the wallet to confirm the switch of the network. All networks registered (on https://chainlist.org/ for exemple) in your web extensions are supported.
+When the connection is `injected` this will open the wallet (for Metamask) to confirm the switch of the network. All networks registered (on https://chainlist.org/ for exemple) in your web extensions are supported.
 
 With `endpoints` the page is reloaded on the chosen network. The network should be specified in `react-ethers` or in the `EVMContext` configuration:
 
@@ -235,6 +305,34 @@ ReactDOM.render(
 ```
 
 You can provide a list of endpoints in `publicEndpoints`
+
+## Create a void signer
+
+A [void signer](https://docs.ethers.io/v5/api/signer/#VoidSigner) is a "watch-only" account that cannot sign transaction:
+
+```js
+import { useEVM } from "react-ethers"
+
+const Dapp = () => {
+  const { methods } = useEVM()
+
+  {...}
+
+  return <>
+      <button onClick={() => methods.createVoidSigner(
+              "0xe5cc7a18b29a090c4Cc72eC7270C4ee1498F73aF"
+            )}>
+        Use "watch-only" account
+       </button>
+
+      <button onClick={() => methods.deleteVoidSigner()}>
+        Delete void signer
+       </button>
+  </>
+}
+```
+
+To create it you should not have any account connected to the dApp (in `injected` connection) and not have any others void signer created.
 
 ## Create a contract instance
 
@@ -281,10 +379,6 @@ REACT_APP_ETHERSCAN_ID=""
 REACT_APP_POCKET_ID=""
 ```
 
-## React-Ethers in action
-
-Visit the template dApp and go through the code.
-
 ## Contribution
 
 You can contribute by:
@@ -292,7 +386,6 @@ You can contribute by:
 - using the librairy and report bug
 - share new ideas to improve it
 - fork and pull request
-- send a tip to the creator and contributors
 
 ©Raphaël
 
