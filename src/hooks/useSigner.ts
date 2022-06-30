@@ -4,16 +4,26 @@ import { Account, Network, Provider } from "../types"
 
 export const useSigner = (
   setAccount: React.Dispatch<React.SetStateAction<Account>>,
-  setProvider: React.Dispatch<React.SetStateAction<Provider>>,
   provider: Provider,
-  network: Network
+  network: Network,
+  voidSigner: boolean
 ) => {
   // Manage account list and try to deconnect by empty this list
 
   useEffect(() => {
     if (provider) {
       if (provider.hasOwnProperty("providerConfigs")) {
-        //
+        if (voidSigner) {
+          setAccount((a) => {
+            ;(async () => {
+              a.address = await a.signer.getAddress()
+              a.balance = (await a.signer.getBalance()).toString()
+            })()
+            return a
+          })
+        } else {
+          setAccount({} as Account)
+        }
       } else {
         ;(async () => {
           const request = (provider as Web3Provider).provider.request
@@ -35,12 +45,22 @@ export const useSigner = (
               walletType: (provider as Web3Provider).connection.url,
             })
           } else {
-            setAccount({} as Account)
+            if (voidSigner) {
+              setAccount((a) => {
+                ;(async () => {
+                  a.address = await a.signer.getAddress()
+                  a.balance = (await a.signer.getBalance()).toString()
+                })()
+                return a
+              })
+            } else {
+              setAccount({} as Account)
+            }
           }
         })()
       }
     }
-  }, [provider, network.blockHeight, setAccount])
+  }, [provider, network.blockHeight, setAccount, voidSigner])
 }
 
 // Another hooks for VoidSigner

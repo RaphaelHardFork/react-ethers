@@ -84,45 +84,45 @@ const networkNull = {
   explorerUrl: "/",
 }
 
-const defaultNetworks = [
+export const defaultNetworks = [
   {
     name: "Ethereum mainnet",
     chainId: 1,
     blockHeight: 0,
     publicEndpoints: [],
-    explorerUrl: "https://etherscan.io/address/",
+    explorerUrl: "https://etherscan.io/",
   },
   {
     name: "Ethereum Ropsten testnet",
     chainId: 3,
     blockHeight: 0,
     publicEndpoints: [],
-    explorerUrl: "https://ropsten.etherscan.io/address/",
+    explorerUrl: "https://ropsten.etherscan.io/",
   },
   {
     name: "Ethereum Rinkeby testnet",
     chainId: 4,
     blockHeight: 0,
     publicEndpoints: [],
-    explorerUrl: "https://rinkeby.etherscan.io/address/",
+    explorerUrl: "https://rinkeby.etherscan.io/",
   },
   {
     name: "Ethereum Görli testnet",
     chainId: 5,
     blockHeight: 0,
     publicEndpoints: [],
-    explorerUrl: "https://goerli.etherscan.io/address/",
+    explorerUrl: "https://goerli.etherscan.io/",
   },
   {
     name: "Ethereum Kovan testnet",
     chainId: 42,
     blockHeight: 0,
     publicEndpoints: [],
-    explorerUrl: "https://kovan.etherscan.io/address/",
+    explorerUrl: "https://kovan.etherscan.io/",
   },
 ]
 
-const knownNetworks = [
+export const knownNetworks = [
   {
     name: "Binance Smart Chain",
     chainId: 56,
@@ -132,7 +132,7 @@ const knownNetworks = [
       "https://bsc-dataseed1.defibit.io/",
       "https://bsc-dataseed1.ninicoin.io/",
     ],
-    explorerUrl: "https://bscscan.com/address/",
+    explorerUrl: "https://bscscan.com/",
   },
   {
     name: "Binance SC testnet",
@@ -144,7 +144,7 @@ const knownNetworks = [
       "https://data-seed-prebsc-2-s2.binance.org:8545/",
       "https://data-seed-prebsc-2-s3.binance.org:8545/",
     ],
-    explorerUrl: "https://testnet.bscscan.com/address/",
+    explorerUrl: "https://testnet.bscscan.com/",
   },
   {
     name: "Polygon mainnet",
@@ -157,7 +157,7 @@ const knownNetworks = [
       "https://matic-mainnet-full-rpc.bwarelabs.com",
       "https://matic-mainnet-archive-rpc.bwarelabs.com",
     ],
-    explorerUrl: "https://polygonscan.com/address/",
+    explorerUrl: "https://polygonscan.com/",
   },
   {
     name: "Polygon Mumbai testnet",
@@ -169,6 +169,6 @@ const knownNetworks = [
       "https://rpc-mumbai.maticvigil.com",
       "https://matic-testnet-archive-rpc.bwarelabs.com",
     ],
-    explorerUrl: "https://mumbai.polygonscan.com/address/",
+    explorerUrl: "https://mumbai.polygonscan.com/",
   },
 ]

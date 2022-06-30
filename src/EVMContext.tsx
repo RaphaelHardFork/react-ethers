@@ -14,10 +14,13 @@ import { useSigner } from "./hooks/useSigner"
 import { Web3Provider } from "@ethersproject/providers"
 import { defaultApiOption } from "./utils/createFallbackProvider"
 import detectEthereumProvider from "@metamask/detect-provider"
+import { ethers } from "ethers"
+import { defaultNetworks, knownNetworks } from "./utils/createNetworkInterface"
 
 export type Props = {
   children: ReactNode
   defaultConnectionType: ConnectionType
+  autoRefresh: boolean
   customNetworks: Network[]
   chainId: number
   apiKeys: ApiKeysOption
@@ -32,6 +35,7 @@ export const EVMContext = ({
   ) === null
     ? "not initialized"
     : "endpoints",
+  autoRefresh = true,
   customNetworks = [],
   chainId = Number(window.localStorage.getItem("network-to-initialize")) || 4,
   apiKeys = defaultApiOption,
@@ -44,14 +48,21 @@ export const EVMContext = ({
     defaultConnectionType
   )
 
+  // Auto refresh
+  const [autoRefreshActive, setAutoRefreshActive] =
+    useState<boolean>(autoRefresh)
+
+  // Void Signer
+  const [voidSigner, setVoidSigner] = useState(false)
+
   // provider
   const [provider, setProvider] = useState<Provider>(null)
   const [network, setNetwork] = useState<Network>({} as Network)
   const [account, setAccount] = useState<Account>({} as Account)
 
-  function launchConnection(connectionType: ConnectionType) {
+  function launchConnection(_connectionType: ConnectionType) {
     if (!provider) {
-      setConnectionType(connectionType)
+      setConnectionType(_connectionType)
     } else {
       console.warn(
         "Connection type cannot be changed once the provider is set, you should reload the page"
@@ -62,9 +73,10 @@ export const EVMContext = ({
   function setAutoRefresh(setTo: boolean) {
     setProvider((p) => {
       if (p !== null) {
-        console.log(`Setting autorefresh to ${setTo}`)
         if (setTo) {
           if (p.listeners("block").length === 0) {
+            console.log("listerners added")
+            setAutoRefreshActive(true)
             return p.on("block", async (blockNumber: number) => {
               console.log(
                 `Block n°${blockNumber} emitted on ${network.name} (${network.chainId})`
@@ -78,6 +90,8 @@ export const EVMContext = ({
             return p
           }
         } else {
+          console.log("listerners removed")
+          setAutoRefreshActive(false)
           return p.removeAllListeners("block")
         }
       } else {
@@ -87,7 +101,7 @@ export const EVMContext = ({
   }
 
   async function switchNetwork(chainId: number) {
-    const paddedChainId = "0x" + chainId.toString(16)
+    const paddedChainId = "0x" + Number(chainId.toString()).toString(16) // thanks javascript
     if (connectionType === "endpoints") {
       window.localStorage.setItem("network-to-initialize", paddedChainId)
       window.location.reload()
@@ -125,6 +139,45 @@ export const EVMContext = ({
     return ethereum ? true : false
   }
 
+  async function createVoidSigner(address: string) {
+    if (address.length !== 42 && !address.startsWith("0x")) {
+      console.warn("Wrong address format")
+    } else if (account.address) {
+      console.warn(
+        "Disconnect accounts from your extensions, or delete existant void signer"
+      )
+    } else {
+      if (provider) {
+        const signer = new ethers.VoidSigner(
+          ethers.utils.getAddress(address.toLowerCase()),
+          provider
+        )
+        const addressSummed = await signer.getAddress()
+        const balance = (await signer.getBalance()).toString()
+        setAccount({
+          address: addressSummed,
+          balance,
+          walletType: "void signer (watch only)",
+          isLogged: true,
+          signer: signer,
+        })
+        setVoidSigner(true)
+      }
+    }
+  }
+
+  function deleteVoidSigner() {
+    setVoidSigner(false)
+  }
+
+  function getNetworkList() {
+    let list: Network[] = []
+    list = list.concat(defaultNetworks)
+    list = list.concat(knownNetworks)
+    list = list.concat(customNetworks)
+    return list
+  }
+
   useEndpoints(
     connectionType,
     setProvider,
@@ -134,19 +187,31 @@ export const EVMContext = ({
     apiKeys
   )
   useInjection(connectionType, setProvider, setAccount, provider)
-  useNetwork(setProvider, setNetwork, provider, true, chainId, [])
-  useSigner(setAccount, setProvider, provider, network)
+  useNetwork(
+    setProvider,
+    setNetwork,
+    provider,
+    autoRefreshActive,
+    chainId,
+    customNetworks
+  )
+  useSigner(setAccount, provider, network, voidSigner)
 
   return (
     <Context.Provider
       value={{
         connectionType,
+        autoRefreshActive,
         provider,
         methods: {
           launchConnection,
           setAutoRefresh,
           switchNetwork,
           loginToInjected,
+          haveWebExtension,
+          createVoidSigner,
+          deleteVoidSigner,
+          getNetworkList,
         },
         network,
         account,

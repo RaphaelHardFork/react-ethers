@@ -2,8 +2,14 @@ import { useContext } from "react"
 import { Context } from "../EVMContext"
 
 export const useEVM = () => {
-  const { provider, account, network, methods, connectionType } =
-    useContext(Context)
+  const {
+    provider,
+    account,
+    network,
+    methods,
+    connectionType,
+    autoRefreshActive,
+  } = useContext(Context)
 
   if (provider === undefined) {
     throw new Error(
@@ -11,5 +17,12 @@ export const useEVM = () => {
     )
   }
 
-  return { provider, account, network, methods, connectionType } as const
+  return {
+    provider,
+    account,
+    network,
+    methods,
+    connectionType,
+    autoRefreshActive,
+  } as const
 }

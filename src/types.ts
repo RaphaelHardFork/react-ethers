@@ -4,6 +4,7 @@ import {
   BaseProvider,
   JsonRpcSigner,
 } from "@ethersproject/providers"
+import { VoidSigner } from "ethers"
 
 // --- provider ---
 export type Provider = null | Web3Provider | FallbackProvider | BaseProvider
@@ -23,7 +24,7 @@ export interface Account {
   address: string
   balance: string | number
   walletType: string
-  signer: JsonRpcSigner
+  signer: JsonRpcSigner | VoidSigner
 }
 
 // --- methods ---
@@ -32,6 +33,10 @@ export type Methods = {
   setAutoRefresh: (setTo: boolean) => void
   switchNetwork: (chainId: number) => void
   loginToInjected: () => void
+  haveWebExtension: () => Promise<boolean>
+  createVoidSigner: (address: string) => void
+  deleteVoidSigner: () => void
+  getNetworkList: () => Network[]
 }
 
 // --- connection type ---
@@ -48,6 +53,7 @@ export interface Config {
 // --- context load ---
 export type ContextLoad = {
   connectionType: ConnectionType
+  autoRefreshActive: boolean
   methods: Methods
   provider: Provider
   network: Network
